@@ -19,6 +19,8 @@ class ActionResult(BaseModel):
     ok: bool
     message: str
     entry: dict[str, Any] | None = None
+    # 被拒绝时按字段给出具体原因，页面可逐条回显，而不是只显示一句总括。
+    errors: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class EntryPayload(BaseModel):

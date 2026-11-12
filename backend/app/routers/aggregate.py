@@ -12,6 +12,12 @@ router = APIRouter(prefix="/api/aggregate", tags=["聚合计算"])
 
 service = AggregateService()
 
+
+class AggregatePayload(EntryPayload):
+    """动作请求：页面把 action 放在顶层，历史调用方放在 values 里，两种都接受。"""
+
+    model_config = {"extra": "allow"}
+
 LIST_FIELDS = ["方案编号", "聚合函数", "目标字段", "分组维度", "时间窗口", "筛选条件", "输出精度", "缓存时间"]
 STATUSES = ["草稿", "待校验", "已启用", "已停用"]
 
@@ -49,9 +55,9 @@ def create_entry(payload: EntryPayload) -> ActionResult:
 
 
 @router.post("/{entry_id}/actions", response_model=ActionResult)
-def run_action(entry_id: int, payload: EntryPayload) -> ActionResult:
+def run_action(entry_id: int, payload: AggregatePayload) -> ActionResult:
     """对单条聚合方案执行提交校验、启用方案、停用方案；不允许的动作会被拦下并说明原因。"""
-    action = str(payload.values.get("action") or "").strip()
+    action = str(payload.values.get("action") or (payload.model_extra or {}).get("action") or "").strip()
     entry, message = service.run_action(entry_id, action)
     if entry is None:
         return ActionResult(ok=False, message=message)
